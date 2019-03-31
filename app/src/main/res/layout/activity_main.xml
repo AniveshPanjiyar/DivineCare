@@ -14,7 +14,7 @@
     android:orientation="horizontal"
     android:weightSum="1">
 
-    <EditText
+    <AutoCompleteTextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/et_search"

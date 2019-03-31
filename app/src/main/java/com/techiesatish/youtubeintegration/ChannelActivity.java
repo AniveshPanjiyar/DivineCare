@@ -26,8 +26,7 @@ public class ChannelActivity extends AppCompatActivity {
     String TAG="ChannelActivity";
     //UC1NF71EwP41VdjAU1iXdLkw
    // UC9CYT9gSNLevX5ey2_6CK0Q
-    String URL="https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC1NF71EwP41VdjAU1iXdLkw&maxResults=25&key={Your_API_KEY}";
-
+    String URL="https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=25&key=AIzaSyCDgWb24K_JbWgJi8q9grBSm9N-bINUfPo";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

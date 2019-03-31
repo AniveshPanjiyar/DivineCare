@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
    CustomListAdapter customListAdapter;
    String searchName;
    String TAG="MainActivity";
+   String defURL="https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=24&order=date&type=video&key=AIzaSyCDgWb24K_JbWgJi8q9grBSm9N-bINUfPo";
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,22 +41,23 @@ public class MainActivity extends AppCompatActivity {
         lvVideo=(ListView)findViewById(R.id.videoList);
         videoDetailsArrayList=new ArrayList<>();
         customListAdapter=new CustomListAdapter(MainActivity.this,videoDetailsArrayList);
+        showVideo(defURL);
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 searchName=etSearch.getText().toString();
-                showVideo();
-                
+                videoDetailsArrayList.clear();
+                showVideo("https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=10&order=date&type=video&q="+searchName+"&key=AIzaSyCDgWb24K_JbWgJi8q9grBSm9N-bINUfPo");
             }
         });
 
     }
 
-    private void showVideo() {
+    private void showVideo(String url) {
 
-        String URL="https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q="+searchName+"&key=AIzaSyAoRYyYO2OwNU2MZhYHcltkbGoGoTqXR5g";
+        String URL="https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=10&order=date&type=video&q="+searchName+"&key=AIzaSyCDgWb24K_JbWgJi8q9grBSm9N-bINUfPo";
         RequestQueue requestQueue=Volley.newRequestQueue(getApplicationContext());
-        StringRequest stringRequest=new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+        StringRequest stringRequest=new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                         JSONObject jsonVideoId=jsonObject1.getJSONObject("id");
                         Log.e(TAG,"video ID"+jsonVideoId);
                         JSONObject jsonsnippet= jsonObject1.getJSONObject("snippet");
-                        JSONObject jsonObjectdefault = jsonsnippet.getJSONObject("thumbnails").getJSONObject("default");
+                        JSONObject jsonObjectdefault = jsonsnippet.getJSONObject("thumbnails").getJSONObject("medium");
                         VideoDetails videoDetails=new VideoDetails();
 
                         String videoid=jsonVideoId.getString("kind");

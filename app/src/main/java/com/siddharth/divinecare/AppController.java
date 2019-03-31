@@ -1,4 +1,4 @@
-package com.techiesatish.youtubeintegration;
+package com.siddharth.divinecare;
 
 import android.app.Application;
 import android.text.TextUtils;

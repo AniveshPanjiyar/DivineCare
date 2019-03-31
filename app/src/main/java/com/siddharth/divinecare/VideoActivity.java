@@ -1,11 +1,7 @@
-package com.techiesatish.youtubeintegration;
+package com.siddharth.divinecare;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Config;
 import android.util.Log;
 import android.widget.Toast;
 

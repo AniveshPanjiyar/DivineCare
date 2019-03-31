@@ -1,10 +1,13 @@
-package com.techiesatish.youtubeintegration;
+package com.siddharth.divinecare;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
+
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -13,33 +16,45 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.util.ArrayList;
 
-public class ChannelActivity extends AppCompatActivity {
-    ListView lvVideo;
-    ArrayList<VideoDetails> videoDetailsArrayList;
-    CustomListAdapter customListAdapter;
-    String searchName;
-    String TAG="ChannelActivity";
-    //UC1NF71EwP41VdjAU1iXdLkw
-   // UC9CYT9gSNLevX5ey2_6CK0Q
-    String URL="https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=25&key=AIzaSyCDgWb24K_JbWgJi8q9grBSm9N-bINUfPo";
-    @Override
+public class MainActivity extends AppCompatActivity {
+   EditText etSearch;
+   Button btnSearch;
+   ListView lvVideo;
+   ArrayList<VideoDetails> videoDetailsArrayList;
+   CustomListAdapter customListAdapter;
+   String searchName;
+   String TAG="MainActivity";
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_channel);
+        setContentView(R.layout.activity_main);
+        etSearch=(EditText)findViewById(R.id.et_search);
+        btnSearch=(Button)findViewById(R.id.btn_search);
         lvVideo=(ListView)findViewById(R.id.videoList);
         videoDetailsArrayList=new ArrayList<>();
-        customListAdapter=new CustomListAdapter(ChannelActivity.this,videoDetailsArrayList);
+        customListAdapter=new CustomListAdapter(MainActivity.this,videoDetailsArrayList);
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                searchName=etSearch.getText().toString();
                 showVideo();
+                
+            }
+        });
 
     }
 
     private void showVideo() {
-        RequestQueue requestQueue= Volley.newRequestQueue(getApplicationContext());
+
+        String URL="https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q="+searchName+"&key=AIzaSyAoRYyYO2OwNU2MZhYHcltkbGoGoTqXR5g";
+        RequestQueue requestQueue=Volley.newRequestQueue(getApplicationContext());
         StringRequest stringRequest=new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -49,22 +64,26 @@ public class ChannelActivity extends AppCompatActivity {
                     for(int i=0;i<jsonArray.length();i++){
                         JSONObject jsonObject1 = jsonArray.getJSONObject(i);
                         JSONObject jsonVideoId=jsonObject1.getJSONObject("id");
+                        Log.e(TAG,"video ID"+jsonVideoId);
                         JSONObject jsonsnippet= jsonObject1.getJSONObject("snippet");
-                        JSONObject jsonObjectdefault = jsonsnippet.getJSONObject("thumbnails").getJSONObject("medium");
+                        JSONObject jsonObjectdefault = jsonsnippet.getJSONObject("thumbnails").getJSONObject("default");
                         VideoDetails videoDetails=new VideoDetails();
 
-                        String videoid=jsonVideoId.getString("videoId");
-
+                        String videoid=jsonVideoId.getString("kind");
                         Log.e(TAG," New Video Id" +videoid);
                         videoDetails.setURL(jsonObjectdefault.getString("url"));
                         videoDetails.setVideoName(jsonsnippet.getString("title"));
                         videoDetails.setVideoDesc(jsonsnippet.getString("description"));
-                           videoDetails.setVideoId(videoid);
+                     //   videoDetails.setVideoId(videoID);
 
-                        videoDetailsArrayList.add(videoDetails);
+                       videoDetailsArrayList.add(videoDetails);
+
+//                         videoDetailsArrayList.clear();
                     }
                     lvVideo.setAdapter(customListAdapter);
-                    customListAdapter.notifyDataSetChanged();
+
+             customListAdapter.notifyDataSetChanged();
+                   // lvVideo.setAdapter(null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }

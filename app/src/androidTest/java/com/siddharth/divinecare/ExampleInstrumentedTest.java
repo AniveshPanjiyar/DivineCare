@@ -1,4 +1,4 @@
-package com.techiesatish.youtubeintegration;
+package com.siddharth.divinecare;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

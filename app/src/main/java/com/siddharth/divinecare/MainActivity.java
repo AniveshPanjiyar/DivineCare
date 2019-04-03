@@ -6,9 +6,11 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -43,17 +45,16 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     String TAG = "MainActivity";
     String defURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=24&order=date&type=video&key=AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k";
-    private String[] SUGGESTIONS = new String[]{
-            "Belgium", "France", "Italy", "Germany", "Spain"
-    };
+    ArrayList<String> SUGGESTIONS = new ArrayList<String>();
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         etSearch = findViewById(R.id.et_search);
         //findsuggestions();
+        getsuggestions();
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_dropdown_item_1line, SUGGESTIONS);
         etSearch.setAdapter(adapter);
 
@@ -62,16 +63,71 @@ public class MainActivity extends AppCompatActivity {
         modelVideoDetailsArrayList = new ArrayList<>();
         getdata();
         //showVideo(defURL);
-        /*btnSearch.setOnClickListener(new View.OnClickListener() {
+        btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                searchName = etSearch.getText().toString();
                 modelVideoDetailsArrayList.clear();
-                showVideo("https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=10&order=date&type=video&q=" + searchName + "&key=AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k");
-                findsuggestions();
+                searchguggestion(etSearch.getText().toString());
             }
-        });*/
+        });
 
+    }
+    public void searchguggestion(final String search)
+    {
+        final ModelVideoDetails modelVideoDetails = new ModelVideoDetails();
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("videos");
+        //Log.e(TAG,search);
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    ModelVideoDetails modelVideoDetails1 = snapshot.getValue(ModelVideoDetails.class);
+                    if (modelVideoDetails1 != null) {
+                        if(modelVideoDetails1.getVideoName().toLowerCase().indexOf(search.toLowerCase())>0)
+                        {
+                            //Log.e(TAG,"true in if search");
+                            modelVideoDetailsArrayList.add(modelVideoDetails1);
+                            if (customListAdapter != null)
+                                customListAdapter.notifyDataSetChanged();
+                        }
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        customListAdapter = new VideoAdapter(MainActivity.this, modelVideoDetailsArrayList);
+        lvVideo.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        lvVideo.setAdapter(customListAdapter);
+
+        //customListAdapter.notifyDataSetChanged();
+    }
+    public void getsuggestions()
+    {
+        final DatabaseReference databaseReference=FirebaseDatabase.getInstance().getReference().child("suggestions");
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot snapshot:dataSnapshot.getChildren())
+                {
+                    String suggestion=snapshot.getValue(String.class);
+                    if(!SUGGESTIONS.contains(suggestion))
+                        SUGGESTIONS.add(suggestion);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void findsuggestions() {
@@ -100,8 +156,8 @@ public class MainActivity extends AppCompatActivity {
                         //Log.e(TAG,title);
                         String[] words = title.split(" ");
                         for (String eachWord : words) {
-                            int index = SUGGESTIONS.length - 1;
-                            SUGGESTIONS[index] = eachWord;
+                            //int index = SUGGESTIONS.length - 1;
+                            //SUGGESTIONS[index] = eachWord;
                             Log.e(TAG, eachWord);
                         }
                     }
@@ -205,6 +261,34 @@ public class MainActivity extends AppCompatActivity {
         requestQueue.add(stringRequest);
 
     }
+    private void suggestions()
+    {
+        final DatabaseReference databaseReference=FirebaseDatabase.getInstance().getReference().child("suggestions");
+        final DatabaseReference reference=FirebaseDatabase.getInstance().getReference().child("videos");
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    ModelVideoDetails modelVideoDetails = snapshot.getValue(ModelVideoDetails.class);
+                    if(modelVideoDetails!=null)
+                    {
+                        //modelVideoDetails.getVideoName();
+                        databaseReference.push().setValue(modelVideoDetails.getVideoName());
+                        String[] words = modelVideoDetails.getVideoName().split(" ");
+                        for (String eachWord : words) {
+                            //databaseReference.push().setValue(eachWord);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+    }
 
     private void getdata() {
         //database
@@ -240,6 +324,7 @@ public class MainActivity extends AppCompatActivity {
         lvVideo.setAdapter(customListAdapter);
 
         //customListAdapter.notifyDataSetChanged();
+        //suggestions();
 
     }
 }

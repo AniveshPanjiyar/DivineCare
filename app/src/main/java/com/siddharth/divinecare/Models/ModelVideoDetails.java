@@ -5,41 +5,41 @@ package com.siddharth.divinecare.Models;
  */
 
 public class ModelVideoDetails {
-    String VideoName;
-    String VideoDesc;
-    String URL;
-    String VideoId;
+    String videoName;
+    String videoDesc;
+    String url;
+    String videoId;
 
 
 public void setVideoName(String VideoName){
-    this.VideoName=VideoName;
+    this.videoName =VideoName;
 }
 
 public String getVideoName(){
-    return VideoName;
+    return videoName;
 }
 
 public void setVideoDesc(String VideoDesc){
-    this.VideoDesc=VideoDesc;
+    this.videoDesc =VideoDesc;
 }
 
 public String getVideoDesc(){
-    return VideoDesc;
+    return videoDesc;
 }
 
-public void setURL(String URL){
-    this.URL=URL;
+public void setUrl(String url){
+    this.url = url;
 }
 
-public String getURL(){
-    return URL;
+public String getUrl(){
+    return url;
 }
 
 public void setVideoId(String VideoId){
-    this.VideoId=VideoId;
+    this.videoId =VideoId;
 }
 public String getVideoId(){
-    return VideoId;
+    return videoId;
 }
 
 }

@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
                         String videoid = jsonVideoId.getString("kind");
                         //Log.e(TAG, " New Video Id" + videoid);
-                        modelVideoDetails.setURL(jsonObjectdefault.getString("url"));
+                        modelVideoDetails.setUrl(jsonObjectdefault.getString("url"));
                         modelVideoDetails.setVideoName(jsonsnippet.getString("title"));
                         modelVideoDetails.setVideoDesc(jsonsnippet.getString("description"));
                         String title = modelVideoDetails.getVideoName();
@@ -143,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
 
                         String videoid = jsonVideoId.getString("videoId");
                         //Log.e(TAG, " New Video Id" + videoid);
-                        modelVideoDetails.setURL(jsonObjectdefault.getString("url"));
+                        modelVideoDetails.setUrl(jsonObjectdefault.getString("url"));
                         modelVideoDetails.setVideoName(jsonsnippet.getString("title"));
                         modelVideoDetails.setVideoDesc(jsonsnippet.getString("description"));
                         modelVideoDetails.setVideoId(videoid);
@@ -159,9 +159,9 @@ public class MainActivity extends AppCompatActivity {
                                 for (DataSnapshot snapshot : dataSnapshot.getChildren())
                                 {
                                     ModelVideoDetails videoDetails1=snapshot.getValue(ModelVideoDetails.class);
-                                    if(videoDetails1!=null&&videoDetails1.getURL()!=null)
+                                    if(videoDetails1!=null&&videoDetails1.getUrl()!=null)
                                     {
-                                        Log.e(TAG,videoDetails1.getURL());
+                                        Log.e(TAG,videoDetails1.getUrl());
                                         videoDetails1.getVideoDesc();
                                         videoDetails1.getVideoId();
                                         videoDetails1.getVideoName();
@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     ModelVideoDetails modelVideoDetails1 = snapshot.getValue(ModelVideoDetails.class);
-                    if (modelVideoDetails1 != null && modelVideoDetails1.getURL() != null) {
+                    if (modelVideoDetails1 != null && modelVideoDetails1.getUrl() != null) {
                         modelVideoDetailsArrayList.add(modelVideoDetails1);
                         if (customListAdapter != null)
                             customListAdapter.notifyDataSetChanged();

@@ -38,7 +38,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
     public void onBindViewHolder(@NonNull final VideoAdapter.ViewHolder viewHolder, int i) {
         viewHolder.video_descriptio.setText(modelVideoDetailsArrayList.get(i).getVideoDesc());
         viewHolder.video_title.setText(modelVideoDetailsArrayList.get(i).getVideoName());
-        Glide.with(context).load(modelVideoDetailsArrayList.get(i).getURL()).into(viewHolder.image);
+        Glide.with(context).load(modelVideoDetailsArrayList.get(i).getUrl()).into(viewHolder.image);
         viewHolder.tv_videoId.setText(modelVideoDetailsArrayList.get(i).getVideoId());
 
         viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {

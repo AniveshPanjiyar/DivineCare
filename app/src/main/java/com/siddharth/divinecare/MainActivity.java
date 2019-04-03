@@ -3,6 +3,8 @@ package com.siddharth.divinecare;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -35,14 +37,14 @@ import java.util.HashMap;
 public class MainActivity extends AppCompatActivity {
     AutoCompleteTextView etSearch;
     Button btnSearch;
-    ListView lvVideo;
+    RecyclerView lvVideo;
     ArrayList<VideoDetails> videoDetailsArrayList;
-    CustomListAdapter customListAdapter;
+    VideoAdapter customListAdapter;
     String searchName;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     String TAG = "MainActivity";
     String defURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=24&order=date&type=video&key=AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k";
-    private String[] SUGGESTIONS = new String[] {
+    private String[] SUGGESTIONS = new String[]{
             "Belgium", "France", "Italy", "Germany", "Spain"
     };
 
@@ -57,9 +59,8 @@ public class MainActivity extends AppCompatActivity {
         etSearch.setAdapter(adapter);
 
         btnSearch = (Button) findViewById(R.id.btn_search);
-        lvVideo = (ListView) findViewById(R.id.videoList);
+        lvVideo = (RecyclerView) findViewById(R.id.videoList);
         videoDetailsArrayList = new ArrayList<>();
-        customListAdapter = new CustomListAdapter(MainActivity.this, videoDetailsArrayList);
         getdata();
         //showVideo(defURL);
         /*btnSearch.setOnClickListener(new View.OnClickListener() {
@@ -73,8 +74,8 @@ public class MainActivity extends AppCompatActivity {
         });*/
 
     }
-    private void findsuggestions()
-    {
+
+    private void findsuggestions() {
         String URL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=10&order=date&type=video&q=" + searchName + "&key=AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k";
         RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
         StringRequest stringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
@@ -96,13 +97,13 @@ public class MainActivity extends AppCompatActivity {
                         videoDetails.setURL(jsonObjectdefault.getString("url"));
                         videoDetails.setVideoName(jsonsnippet.getString("title"));
                         videoDetails.setVideoDesc(jsonsnippet.getString("description"));
-                        String title=videoDetails.getVideoName();
+                        String title = videoDetails.getVideoName();
                         //Log.e(TAG,title);
-                        String[] words=title.split(" ");
-                        for(String eachWord : words) {
-                            int index=SUGGESTIONS.length-1;
-                            SUGGESTIONS[index]=eachWord;
-                            Log.e(TAG,eachWord);
+                        String[] words = title.split(" ");
+                        for (String eachWord : words) {
+                            int index = SUGGESTIONS.length - 1;
+                            SUGGESTIONS[index] = eachWord;
+                            Log.e(TAG, eachWord);
                         }
                     }
                 } catch (JSONException e) {
@@ -204,28 +205,25 @@ public class MainActivity extends AppCompatActivity {
         requestQueue.add(stringRequest);
 
     }
-    private void getdata()
-    {
+
+    private void getdata() {
         //database
         //DatabaseReference reference= FirebaseDatabase.getInstance().getReference().child("videos");
         //HashMap<String,Object> upload=new HashMap<>();
         //upload.put(jsonsnippet.getString("title").toString(),videoDetails);
         //reference.updateChildren(upload);
         final VideoDetails videoDetails = new VideoDetails();
-        DatabaseReference ref= FirebaseDatabase.getInstance().getReference().child("videos");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("videos");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren())
-                {
-                    VideoDetails videoDetails1=snapshot.getValue(VideoDetails.class);
-                    if(videoDetails1!=null&&videoDetails1.getURL()!=null) {
-                        videoDetails.setURL(videoDetails1.getURL());
-                        videoDetails.setVideoDesc(videoDetails1.getVideoDesc());
-                        videoDetails.setVideoId(videoDetails1.getVideoId());
-                        videoDetails.setVideoName(videoDetails1.getVideoName());
-                        Log.e(TAG,videoDetails1.getVideoName());
-                        videoDetailsArrayList.add(videoDetails);
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    VideoDetails videoDetails1 = snapshot.getValue(VideoDetails.class);
+                    if (videoDetails1 != null && videoDetails1.getURL() != null) {
+                        videoDetailsArrayList.add(videoDetails1);
+                        if (customListAdapter != null)
+                            customListAdapter.notifyDataSetChanged();
+
                     }
 
                 }
@@ -237,6 +235,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+        customListAdapter = new VideoAdapter(MainActivity.this, videoDetailsArrayList);
+        lvVideo.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         lvVideo.setAdapter(customListAdapter);
 
         //customListAdapter.notifyDataSetChanged();

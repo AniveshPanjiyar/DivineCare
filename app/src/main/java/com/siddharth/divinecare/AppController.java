@@ -7,6 +7,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
+import com.google.firebase.FirebaseApp;
 
 public class AppController extends Application {
     public static final String TAG = AppController.class.getSimpleName();
@@ -16,6 +17,7 @@ public class AppController extends Application {
 
     public void onCreate() {
         super.onCreate();
+        FirebaseApp.initializeApp(this);
         mInstance = this;
     }
 

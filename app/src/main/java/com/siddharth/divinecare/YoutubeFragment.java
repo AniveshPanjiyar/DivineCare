@@ -16,7 +16,7 @@ public class YoutubeFragment extends Fragment {
 
     FragmentActivity mContext;
     private YouTubePlayer YPlayer;
-    String YOUTUBE_API_KEY="AIzaSyAoRYyYO2OwNU2MZhYHcltkbGoGoTqXR5g";
+    String YOUTUBE_API_KEY="AIzaSyBjUOXTq7zZMr_NQP2RVPHujdDpXlod23E";
 
 
     @Override

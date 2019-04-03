@@ -1,10 +1,10 @@
-package com.siddharth.divinecare;
+package com.siddharth.divinecare.Models;
 
 /**
  * Created by Ansh on 29/10/2017 12:26 AM.
  */
 
-public class VideoDetails {
+public class ModelVideoDetails {
     String VideoName;
     String VideoDesc;
     String URL;

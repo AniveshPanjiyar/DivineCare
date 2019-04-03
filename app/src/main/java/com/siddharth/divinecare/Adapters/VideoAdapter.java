@@ -1,4 +1,4 @@
-package com.siddharth.divinecare;
+package com.siddharth.divinecare.Adapters;
 
 import android.content.Context;
 import android.content.Intent;
@@ -12,16 +12,19 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.siddharth.divinecare.Activities.VideoActivity;
+import com.siddharth.divinecare.Models.ModelVideoDetails;
+import com.siddharth.divinecare.R;
 
 import java.util.ArrayList;
 
 public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> {
     Context context;
-    private ArrayList<VideoDetails> videoDetailsArrayList;
+    private ArrayList<ModelVideoDetails> modelVideoDetailsArrayList;
 
-    public VideoAdapter(Context context, ArrayList<VideoDetails> videoDetailsArrayList) {
+    public VideoAdapter(Context context, ArrayList<ModelVideoDetails> modelVideoDetailsArrayList) {
         this.context = context;
-        this.videoDetailsArrayList = videoDetailsArrayList;
+        this.modelVideoDetailsArrayList = modelVideoDetailsArrayList;
     }
 
     @NonNull
@@ -33,10 +36,10 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull final VideoAdapter.ViewHolder viewHolder, int i) {
-        viewHolder.video_descriptio.setText(videoDetailsArrayList.get(i).getVideoDesc());
-        viewHolder.video_title.setText(videoDetailsArrayList.get(i).getVideoName());
-        Glide.with(context).load(videoDetailsArrayList.get(i).getURL()).into(viewHolder.image);
-        viewHolder.tv_videoId.setText(videoDetailsArrayList.get(i).getVideoId());
+        viewHolder.video_descriptio.setText(modelVideoDetailsArrayList.get(i).getVideoDesc());
+        viewHolder.video_title.setText(modelVideoDetailsArrayList.get(i).getVideoName());
+        Glide.with(context).load(modelVideoDetailsArrayList.get(i).getURL()).into(viewHolder.image);
+        viewHolder.tv_videoId.setText(modelVideoDetailsArrayList.get(i).getVideoId());
 
         viewHolder.linearLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,7 +55,7 @@ public class VideoAdapter extends RecyclerView.Adapter<VideoAdapter.ViewHolder> 
 
     @Override
     public int getItemCount() {
-        return videoDetailsArrayList
+        return modelVideoDetailsArrayList
 
 
 

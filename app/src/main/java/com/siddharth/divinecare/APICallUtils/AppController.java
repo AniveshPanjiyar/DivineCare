@@ -1,4 +1,4 @@
-package com.siddharth.divinecare;
+package com.siddharth.divinecare.APICallUtils;
 
 import android.app.Application;
 import android.text.TextUtils;

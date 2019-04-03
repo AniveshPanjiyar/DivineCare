@@ -1,4 +1,4 @@
-package com.siddharth.divinecare;
+package com.siddharth.divinecare.Utils;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
+import com.siddharth.divinecare.R;
 
 public class YoutubeFragment extends Fragment {
 

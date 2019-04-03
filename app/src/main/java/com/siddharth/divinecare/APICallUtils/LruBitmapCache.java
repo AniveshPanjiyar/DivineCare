@@ -1,4 +1,4 @@
-package com.siddharth.divinecare;
+package com.siddharth.divinecare.APICallUtils;
 
 import android.graphics.Bitmap;
 import android.util.LruCache;

@@ -1,0 +1,44 @@
+{
+  "project_info": {
+    "project_number": "181049646761",
+    "firebase_url": "https://divinecare-539a3.firebaseio.com",
+    "project_id": "divinecare-539a3",
+    "storage_bucket": "divinecare-539a3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:181049646761:android:b986c12f591f60f4",
+        "android_client_info": {
+          "package_name": "com.siddharth.divinecare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "181049646761-9utv95igfoc2vl9if8bmc0llu3b6vdjn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.siddharth.divinecare",
+            "certificate_hash": "634224e708b01fcaf12e66f57f7d9395d3d1f526"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "181049646761-abqomkjlsc1upnv2m75cfnjqvd8mtvk7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

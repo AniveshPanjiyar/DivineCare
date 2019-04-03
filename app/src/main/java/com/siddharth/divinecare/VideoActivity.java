@@ -12,7 +12,7 @@ import com.google.android.youtube.player.YouTubePlayerView;
 
 public class VideoActivity extends YouTubeBaseActivity implements YouTubePlayer.OnInitializedListener {
 YouTubePlayerView youTubePlayerView;
-String API_KEY="Your_API_KEY";
+String API_KEY="AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k";
     private static final int RECOVERY_REQUEST = 1;
     String TAG="VideoActivity";
     @Override

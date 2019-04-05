@@ -10,6 +10,9 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.TabHost;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -37,7 +40,7 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity {
     AutoCompleteTextView etSearch;
-    Button btnSearch;
+    Button btnSearch, more;
     RecyclerView lvVideo;
     ArrayList<ModelVideoDetails> modelVideoDetailsArrayList;
     VideoAdapter customListAdapter;
@@ -47,25 +50,51 @@ public class MainActivity extends AppCompatActivity {
     String defURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken&type=video&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA";
     ArrayList<String> SUGGESTIONS = new ArrayList<String>();
     ArrayList<String> PAGETOKEN = new ArrayList<String>();
+    int pageItems = 10;
+    int pageNumber = 1;
 
-    int page=0;
+    int page = 0;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         etSearch = findViewById(R.id.et_search);
+        more = findViewById(R.id.moreButton);
         getSuggestionsFromDatabaseToArray();
-        PAGETOKEN.add(0,"");
+        PAGETOKEN.add(0, "");
         btnSearch = (Button) findViewById(R.id.btn_search);
         lvVideo = (RecyclerView) findViewById(R.id.videoList);
         modelVideoDetailsArrayList = new ArrayList<>();
-        getVideosFromDatabaseToAdapter();
+        getVideosFromDatabaseToAdapter(pageItems);
         //uncomment this to push data to database from api call
-        pushNewVideosFromApiCallToDatabase(defURL);
+        //pushNewVideosFromApiCallToDatabase(defURL);
+        lvVideo.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                if (recyclerView.getAdapter() != null)
+                    if (recyclerView.getAdapter().getItemCount() != 0) {
+                        int lastVisibleItemPosition = ((LinearLayoutManager) recyclerView.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+                        if (lastVisibleItemPosition != RecyclerView.NO_POSITION && lastVisibleItemPosition == recyclerView.getAdapter().getItemCount() - 1) {
+                            Log.e(TAG, "Last");
+                            pageNumber++;
+                            getVideosFromDatabaseToAdapter(pageItems * pageNumber);
+                        }
+                    }
+
+            }
+        });
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 modelVideoDetailsArrayList.clear();
                 getVideosFromDatabaseAfterSearch(etSearch.getText().toString());
+            }
+        });
+        more.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pageNumber++;
+                getVideosFromDatabaseToAdapter(pageItems * pageNumber);
             }
         });
 
@@ -81,8 +110,8 @@ public class MainActivity extends AppCompatActivity {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     ModelVideoDetails modelVideoDetails1 = snapshot.getValue(ModelVideoDetails.class);
                     if (modelVideoDetails1 != null) {
-                        if (modelVideoDetails1.getVideoName().toLowerCase().indexOf(search.toLowerCase()) > 0||
-                                modelVideoDetails1.getVideoName().toLowerCase().matches(search.toLowerCase())||
+                        if (modelVideoDetails1.getVideoName().toLowerCase().indexOf(search.toLowerCase()) > 0 ||
+                                modelVideoDetails1.getVideoName().toLowerCase().matches(search.toLowerCase()) ||
                                 modelVideoDetails1.getVideoName().toLowerCase().contains(search.toLowerCase())) {
                             //Log.e(TAG,"true in if search");
                             modelVideoDetailsArrayList.add(modelVideoDetails1);
@@ -129,6 +158,60 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void getVideosFromDatabaseToAdapter(final int pageitems) {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("videos");
+        ref.limitToFirst(pageitems).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (pageNumber == 1) {
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        ModelVideoDetails modelVideoDetails = snapshot.getValue(ModelVideoDetails.class);
+                        if (modelVideoDetails != null && modelVideoDetails.getUrl() != null) {
+                            modelVideoDetailsArrayList.add(modelVideoDetails);
+                            if (customListAdapter != null)
+                                customListAdapter.notifyDataSetChanged();
+                        }
+
+                    }
+                } else {
+                    Log.e(TAG, String.valueOf(pageItems * (pageNumber - 1)));
+                    int skipvideos = -1;
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        //Log.e(TAG,String.valueOf(skipvideos));
+                        skipvideos++;
+                        if (skipvideos >= (pageItems * (pageNumber - 1))) {
+                            ModelVideoDetails modelVideoDetails = snapshot.getValue(ModelVideoDetails.class);
+                            if (modelVideoDetails != null && modelVideoDetails.getUrl() != null) {
+                                modelVideoDetailsArrayList.add(modelVideoDetails);
+                                if (customListAdapter != null)
+                                    customListAdapter.notifyDataSetChanged();
+                                if(skipvideos==pageItems * (pageNumber - 1))
+                                {
+                                    lvVideo.scrollToPosition(skipvideos);
+                                }
+                            }
+                        }
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        customListAdapter = new VideoAdapter(MainActivity.this, modelVideoDetailsArrayList);
+        lvVideo.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+        lvVideo.setAdapter(customListAdapter);
+
+        //uncomment to push suggestion (titles of videos) into datatbase
+        //pushSuggestionsFromDatabseToDatabase();
+
+    }
+
     private void getVideosFromDatabaseToAdapter() {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("videos");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -140,7 +223,6 @@ public class MainActivity extends AppCompatActivity {
                         modelVideoDetailsArrayList.add(modelVideoDetails);
                         if (customListAdapter != null)
                             customListAdapter.notifyDataSetChanged();
-
                     }
 
                 }
@@ -171,7 +253,6 @@ public class MainActivity extends AppCompatActivity {
                     final JSONObject jsonObject = new JSONObject(response);
 
 
-
                     JSONArray jsonArray = jsonObject.getJSONArray("items");
                     for (int i = 0; i < jsonArray.length(); i++) {
                         JSONObject jsonObject1 = jsonArray.getJSONObject(i);
@@ -189,13 +270,12 @@ public class MainActivity extends AppCompatActivity {
                         reference.push().setValue(modelVideoDetails);
                     }
                     try {
-                        if (jsonObject.has("nextPageToken") )
-                        {
-                            PAGETOKEN.add(++page,jsonObject.getString("nextPageToken"));
-                            String nextPageToken=jsonObject.getString("nextPageToken");
-                            Log.e(TAG,nextPageToken);
+                        if (jsonObject.has("nextPageToken")) {
+                            PAGETOKEN.add(++page, jsonObject.getString("nextPageToken"));
+                            String nextPageToken = jsonObject.getString("nextPageToken");
+                            Log.e(TAG, nextPageToken);
                             pushNewVideosFromApiCallToDatabase("https://www.googleapis.com/youtube/v3/search?part=snippet&" +
-                                    "channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken="+nextPageToken+"&type=video" +
+                                    "channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken=" + nextPageToken + "&type=video" +
                                     "&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA");
                         }
 

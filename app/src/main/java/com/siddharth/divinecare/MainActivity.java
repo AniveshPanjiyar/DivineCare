@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.TextView;
 
 import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
@@ -20,6 +19,7 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -44,36 +44,32 @@ public class MainActivity extends AppCompatActivity {
     String searchName;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     String TAG = "MainActivity";
-    String defURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=24&order=date&type=video&key=AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k";
+    String defURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken&type=video&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA";
     ArrayList<String> SUGGESTIONS = new ArrayList<String>();
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         etSearch = findViewById(R.id.et_search);
-        //findsuggestions();
-        getsuggestions();
-
-        final ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_dropdown_item_1line, SUGGESTIONS);
-        etSearch.setAdapter(adapter);
+        getSuggestionsFromDatabaseToArray();
 
         btnSearch = (Button) findViewById(R.id.btn_search);
         lvVideo = (RecyclerView) findViewById(R.id.videoList);
         modelVideoDetailsArrayList = new ArrayList<>();
-        getdata();
-        //showVideo(defURL);
+        getVideosFromDatabaseToAdapter();
+        //uncomment this to push data to database from api call
+        //pushNewVideosFromApiCallToDatabase(defURL);
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 modelVideoDetailsArrayList.clear();
-                searchguggestion(etSearch.getText().toString());
+                getVideosFromDatabaseAfterSearch(etSearch.getText().toString());
             }
         });
 
     }
-    public void searchguggestion(final String search)
-    {
+
+    public void getVideosFromDatabaseAfterSearch(final String search) {
         final ModelVideoDetails modelVideoDetails = new ModelVideoDetails();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("videos");
         //Log.e(TAG,search);
@@ -83,8 +79,9 @@ public class MainActivity extends AppCompatActivity {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     ModelVideoDetails modelVideoDetails1 = snapshot.getValue(ModelVideoDetails.class);
                     if (modelVideoDetails1 != null) {
-                        if(modelVideoDetails1.getVideoName().toLowerCase().indexOf(search.toLowerCase())>0)
-                        {
+                        if (modelVideoDetails1.getVideoName().toLowerCase().indexOf(search.toLowerCase()) > 0||
+                                modelVideoDetails1.getVideoName().toLowerCase().matches(search.toLowerCase())||
+                                modelVideoDetails1.getVideoName().toLowerCase().contains(search.toLowerCase())) {
                             //Log.e(TAG,"true in if search");
                             modelVideoDetailsArrayList.add(modelVideoDetails1);
                             if (customListAdapter != null)
@@ -105,22 +102,21 @@ public class MainActivity extends AppCompatActivity {
         customListAdapter = new VideoAdapter(MainActivity.this, modelVideoDetailsArrayList);
         lvVideo.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         lvVideo.setAdapter(customListAdapter);
-
-        //customListAdapter.notifyDataSetChanged();
     }
-    public void getsuggestions()
-    {
-        final DatabaseReference databaseReference=FirebaseDatabase.getInstance().getReference().child("suggestions");
+
+    public void getSuggestionsFromDatabaseToArray() {
+        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("suggestions");
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for(DataSnapshot snapshot:dataSnapshot.getChildren())
-                {
-                    String suggestion=snapshot.getValue(String.class);
-                    if(!SUGGESTIONS.contains(suggestion))
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String suggestion = snapshot.getValue(String.class);
+                    if (!SUGGESTIONS.contains(suggestion))
                         SUGGESTIONS.add(suggestion);
                 }
-
+                final ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
+                        android.R.layout.simple_dropdown_item_1line, SUGGESTIONS);
+                etSearch.setAdapter(adapter);
             }
 
             @Override
@@ -130,181 +126,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void findsuggestions() {
-        String URL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=10&order=date&type=video&q=" + searchName + "&key=AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k";
-        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject jsonObject = new JSONObject(response);
-                    JSONArray jsonArray = jsonObject.getJSONArray("items");
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject jsonObject1 = jsonArray.getJSONObject(i);
-                        JSONObject jsonVideoId = jsonObject1.getJSONObject("id");
-                        //Log.e(TAG, "video ID" + jsonVideoId);
-                        JSONObject jsonsnippet = jsonObject1.getJSONObject("snippet");
-                        JSONObject jsonObjectdefault = jsonsnippet.getJSONObject("thumbnails").getJSONObject("medium");
-                        ModelVideoDetails modelVideoDetails = new ModelVideoDetails();
 
-                        String videoid = jsonVideoId.getString("kind");
-                        //Log.e(TAG, " New Video Id" + videoid);
-                        modelVideoDetails.setUrl(jsonObjectdefault.getString("url"));
-                        modelVideoDetails.setVideoName(jsonsnippet.getString("title"));
-                        modelVideoDetails.setVideoDesc(jsonsnippet.getString("description"));
-                        String title = modelVideoDetails.getVideoName();
-                        //Log.e(TAG,title);
-                        String[] words = title.split(" ");
-                        for (String eachWord : words) {
-                            //int index = SUGGESTIONS.length - 1;
-                            //SUGGESTIONS[index] = eachWord;
-                            Log.e(TAG, eachWord);
-                        }
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
-        int socketTimeout = 30000;
-        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-        stringRequest.setRetryPolicy(policy);
-        requestQueue.add(stringRequest);
-
-    }
-
-    private void showVideo(String url) {
-
-        String URL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=10&order=date&type=video&q=" + searchName + "&key=AIzaSyB_imF8YXU8atV9RMcKaBerNmOrlw0yx8k";
-        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject jsonObject = new JSONObject(response);
-                    JSONArray jsonArray = jsonObject.getJSONArray("items");
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject jsonObject1 = jsonArray.getJSONObject(i);
-                        JSONObject jsonVideoId = jsonObject1.getJSONObject("id");
-                        //Log.e(TAG, "video ID" + jsonVideoId);
-                        JSONObject jsonsnippet = jsonObject1.getJSONObject("snippet");
-                        JSONObject jsonObjectdefault = jsonsnippet.getJSONObject("thumbnails").getJSONObject("medium");
-                        final ModelVideoDetails modelVideoDetails = new ModelVideoDetails();
-
-                        String videoid = jsonVideoId.getString("videoId");
-                        //Log.e(TAG, " New Video Id" + videoid);
-                        modelVideoDetails.setUrl(jsonObjectdefault.getString("url"));
-                        modelVideoDetails.setVideoName(jsonsnippet.getString("title"));
-                        modelVideoDetails.setVideoDesc(jsonsnippet.getString("description"));
-                        modelVideoDetails.setVideoId(videoid);
-                        DatabaseReference reference= FirebaseDatabase.getInstance().getReference().child("videos");
-                        HashMap<String,Object> upload=new HashMap<>();
-                        upload.put(jsonsnippet.getString("title").toString(),modelVideoDetails);
-                        //reference.updateChildren(upload);
-                        reference.push().setValue(modelVideoDetails);
-                        /*DatabaseReference ref= FirebaseDatabase.getInstance().getReference().child("videos");
-                        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                for (DataSnapshot snapshot : dataSnapshot.getChildren())
-                                {
-                                    ModelVideoDetails videoDetails1=snapshot.getValue(ModelVideoDetails.class);
-                                    if(videoDetails1!=null&&videoDetails1.getUrl()!=null)
-                                    {
-                                        Log.e(TAG,videoDetails1.getUrl());
-                                        videoDetails1.getVideoDesc();
-                                        videoDetails1.getVideoId();
-                                        videoDetails1.getVideoName();
-
-                                    }
-
-                                }
-
-                            }
-
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });*/
-
-
-                        modelVideoDetailsArrayList.add(modelVideoDetails);
-
-//                         modelVideoDetailsArrayList.clear();
-                    }
-
-                    //lvVideo.setAdapter(customListAdapter);
-
-                    //customListAdapter.notifyDataSetChanged();
-                    // lvVideo.setAdapter(null);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                error.printStackTrace();
-            }
-        });
-        int socketTimeout = 30000;
-        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
-        stringRequest.setRetryPolicy(policy);
-        requestQueue.add(stringRequest);
-
-    }
-    private void suggestions()
-    {
-        final DatabaseReference databaseReference=FirebaseDatabase.getInstance().getReference().child("suggestions");
-        final DatabaseReference reference=FirebaseDatabase.getInstance().getReference().child("videos");
-        reference.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    ModelVideoDetails modelVideoDetails = snapshot.getValue(ModelVideoDetails.class);
-                    if(modelVideoDetails!=null)
-                    {
-                        //modelVideoDetails.getVideoName();
-                        databaseReference.push().setValue(modelVideoDetails.getVideoName());
-                        String[] words = modelVideoDetails.getVideoName().split(" ");
-                        for (String eachWord : words) {
-                            //databaseReference.push().setValue(eachWord);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-    }
-
-    private void getdata() {
-        //database
-        //DatabaseReference reference= FirebaseDatabase.getInstance().getReference().child("videos");
-        //HashMap<String,Object> upload=new HashMap<>();
-        //upload.put(jsonsnippet.getString("title").toString(),modelVideoDetails);
-        //reference.updateChildren(upload);
-        final ModelVideoDetails modelVideoDetails = new ModelVideoDetails();
+    private void getVideosFromDatabaseToAdapter() {
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference().child("videos");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    ModelVideoDetails modelVideoDetails1 = snapshot.getValue(ModelVideoDetails.class);
-                    if (modelVideoDetails1 != null && modelVideoDetails1.getUrl() != null) {
-                        modelVideoDetailsArrayList.add(modelVideoDetails1);
+                    ModelVideoDetails modelVideoDetails = snapshot.getValue(ModelVideoDetails.class);
+                    if (modelVideoDetails != null && modelVideoDetails.getUrl() != null) {
+                        modelVideoDetailsArrayList.add(modelVideoDetails);
                         if (customListAdapter != null)
                             customListAdapter.notifyDataSetChanged();
 
@@ -323,8 +154,92 @@ public class MainActivity extends AppCompatActivity {
         lvVideo.setLayoutManager(new LinearLayoutManager(MainActivity.this));
         lvVideo.setAdapter(customListAdapter);
 
-        //customListAdapter.notifyDataSetChanged();
-        //suggestions();
+        //uncomment to push suggestion (titles of videos) into datatbase
+        //pushSuggestionsFromDatabseToDatabase();
+
+    }
+
+    private void pushNewVideosFromApiCallToDatabase(String url) {
+
+        RequestQueue requestQueue = Volley.newRequestQueue(getApplicationContext());
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    final JSONObject jsonObject = new JSONObject(response);
+
+                    JSONArray jsonArray = jsonObject.getJSONArray("items");
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject jsonObject1 = jsonArray.getJSONObject(i);
+                        JSONObject jsonVideoId = jsonObject1.getJSONObject("id");
+                        JSONObject jsonsnippet = jsonObject1.getJSONObject("snippet");
+                        JSONObject jsonObjectdefault = jsonsnippet.getJSONObject("thumbnails").getJSONObject("medium");
+                        final ModelVideoDetails modelVideoDetails = new ModelVideoDetails();
+
+                        String videoid = jsonVideoId.getString("videoId");
+                        modelVideoDetails.setUrl(jsonObjectdefault.getString("url"));
+                        modelVideoDetails.setVideoName(jsonsnippet.getString("title"));
+                        modelVideoDetails.setVideoDesc(jsonsnippet.getString("description"));
+                        modelVideoDetails.setVideoId(videoid);
+                        DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("videos");
+                        reference.push().setValue(modelVideoDetails);
+                    }
+                    try {
+                        if (jsonObject.has("nextPageToken"))
+                        {
+                            String nextPageToken=jsonObject.getString("nextPageToken");
+                            Log.e(TAG,nextPageToken);
+                            pushNewVideosFromApiCallToDatabase("https://www.googleapis.com/youtube/v3/search?part=snippet&" +
+                            "channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken="+nextPageToken+"&type=video" +
+                            "&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA");
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+        int socketTimeout = 30000;
+        RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, DefaultRetryPolicy.DEFAULT_MAX_RETRIES, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT);
+        stringRequest.setRetryPolicy(policy);
+        requestQueue.add(stringRequest);
+
+    }
+
+    private void pushSuggestionsFromDatabseToDatabase() {
+        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child("suggestions");
+        final DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("videos");
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    ModelVideoDetails modelVideoDetails = snapshot.getValue(ModelVideoDetails.class);
+                    if (modelVideoDetails != null) {
+                        //modelVideoDetails.getVideoName();
+                        databaseReference.push().setValue(modelVideoDetails.getVideoName());
+                        String[] words = modelVideoDetails.getVideoName().split(" ");
+                        for (String eachWord : words) {
+                            //databaseReference.push().setValue(eachWord);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
     }
 }

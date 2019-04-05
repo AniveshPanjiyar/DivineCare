@@ -46,19 +46,21 @@ public class MainActivity extends AppCompatActivity {
     String TAG = "MainActivity";
     String defURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken&type=video&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA";
     ArrayList<String> SUGGESTIONS = new ArrayList<String>();
+    ArrayList<String> PAGETOKEN = new ArrayList<String>();
 
+    int page=0;
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         etSearch = findViewById(R.id.et_search);
         getSuggestionsFromDatabaseToArray();
-
+        PAGETOKEN.add(0,"");
         btnSearch = (Button) findViewById(R.id.btn_search);
         lvVideo = (RecyclerView) findViewById(R.id.videoList);
         modelVideoDetailsArrayList = new ArrayList<>();
         getVideosFromDatabaseToAdapter();
         //uncomment this to push data to database from api call
-        //pushNewVideosFromApiCallToDatabase(defURL);
+        pushNewVideosFromApiCallToDatabase(defURL);
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -168,6 +170,8 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     final JSONObject jsonObject = new JSONObject(response);
 
+
+
                     JSONArray jsonArray = jsonObject.getJSONArray("items");
                     for (int i = 0; i < jsonArray.length(); i++) {
                         JSONObject jsonObject1 = jsonArray.getJSONObject(i);
@@ -185,14 +189,16 @@ public class MainActivity extends AppCompatActivity {
                         reference.push().setValue(modelVideoDetails);
                     }
                     try {
-                        if (jsonObject.has("nextPageToken"))
+                        if (jsonObject.has("nextPageToken") )
                         {
+                            PAGETOKEN.add(++page,jsonObject.getString("nextPageToken"));
                             String nextPageToken=jsonObject.getString("nextPageToken");
                             Log.e(TAG,nextPageToken);
                             pushNewVideosFromApiCallToDatabase("https://www.googleapis.com/youtube/v3/search?part=snippet&" +
-                            "channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken="+nextPageToken+"&type=video" +
-                            "&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA");
+                                    "channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken="+nextPageToken+"&type=video" +
+                                    "&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA");
                         }
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }

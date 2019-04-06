@@ -1,5 +1,6 @@
 package com.siddharth.divinecare;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
@@ -33,6 +34,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.siddharth.divinecare.Activities.LoginActivity;
 import com.siddharth.divinecare.Adapters.VideoAdapter;
 import com.siddharth.divinecare.Models.ModelVideoDetails;
 
@@ -111,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initUI() {
+        //repo link https://github.com/Devlight/NavigationTabBar
         final ViewPager viewPager = (ViewPager) findViewById(R.id.vp_horizontal_ntb);
         viewPager.setAdapter(new PagerAdapter() {
             @Override
@@ -167,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else if(position==3)
                 {
+                    startActivity(new Intent(MainActivity.this, LoginActivity.class));
                     view = LayoutInflater.from(
                             getBaseContext()).inflate(R.layout.empty_layout, null, false);
                 }

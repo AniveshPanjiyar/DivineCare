@@ -1,12 +1,17 @@
 package com.siddharth.divinecare;
 
+import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -38,6 +43,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import devlight.io.library.ntb.NavigationTabBar;
+
 public class MainActivity extends AppCompatActivity {
     AutoCompleteTextView etSearch;
     Button btnSearch, more;
@@ -49,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
     String TAG = "MainActivity";
     String defURL = "https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=UC0bB4q6DDEop428dHHraWVg&maxResults=50&order=date&pageToken&type=video&key=AIzaSyDovtex4ZGDh3K9cJhdUAPc_feDyssTQrA";
     ArrayList<String> SUGGESTIONS = new ArrayList<String>();
-    ArrayList<String> PAGETOKEN = new ArrayList<String>();
     int pageItems = 10;
     int pageNumber = 1;
 
@@ -58,17 +64,21 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        etSearch = findViewById(R.id.et_search);
-        more = findViewById(R.id.moreButton);
-        getSuggestionsFromDatabaseToArray();
-        PAGETOKEN.add(0, "");
-        btnSearch = (Button) findViewById(R.id.btn_search);
-        lvVideo = (RecyclerView) findViewById(R.id.videoList);
-        modelVideoDetailsArrayList = new ArrayList<>();
-        getVideosFromDatabaseToAdapter(pageItems);
+        //etSearch = findViewById(R.id.et_search);
+        //more = findViewById(R.id.moreButton);
+        //getSuggestionsFromDatabaseToArray();
+        //btnSearch = (Button) findViewById(R.id.btn_search);
+        //lvVideo = (RecyclerView) findViewById(R.id.videoList);
+        //modelVideoDetailsArrayList = new ArrayList<>();
+        //getVideosFromDatabaseToAdapter(pageItems);
         //uncomment this to push data to database from api call
         //pushNewVideosFromApiCallToDatabase(defURL);
-        lvVideo.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+        //navigation bar
+        initUI();
+
+
+        /*lvVideo.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 if (recyclerView.getAdapter() != null)
@@ -96,8 +106,174 @@ public class MainActivity extends AppCompatActivity {
                 pageNumber++;
                 getVideosFromDatabaseToAdapter(pageItems * pageNumber);
             }
+        });*/
+
+    }
+
+    private void initUI() {
+        final ViewPager viewPager = (ViewPager) findViewById(R.id.vp_horizontal_ntb);
+        viewPager.setAdapter(new PagerAdapter() {
+            @Override
+            public int getCount() {
+                return 5;
+            }
+
+            @Override
+            public boolean isViewFromObject(final View view, final Object object) {
+                return view.equals(object);
+            }
+
+            @Override
+            public void destroyItem(final View container, final int position, final Object object) {
+                ((ViewPager) container).removeView((View) object);
+            }
+
+            @Override
+            public Object instantiateItem(final ViewGroup container, final int position) {
+                View view = LayoutInflater.from(
+                        getBaseContext()).inflate(R.layout.empty_layout, null, false);;
+                if(position==1)
+                {
+                    view = LayoutInflater.from(
+                            getBaseContext()).inflate(R.layout.item_vp, null, false);
+                    //final TextView txtPage = (TextView) view.findViewById(R.id.txt_vp_item_page);
+                    //txtPage.setText(String.format("Page #%d", position));
+                    etSearch = view.findViewById(R.id.et_search);
+                    more = view.findViewById(R.id.moreButton);
+                    getSuggestionsFromDatabaseToArray();
+                    btnSearch = (Button) view.findViewById(R.id.btn_search);
+                    lvVideo = (RecyclerView) view.findViewById(R.id.videoList);
+                    modelVideoDetailsArrayList = new ArrayList<>();
+                    getVideosFromDatabaseToAdapter(pageItems);
+                    btnSearch.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            modelVideoDetailsArrayList.clear();
+                            getVideosFromDatabaseAfterSearch(etSearch.getText().toString());
+                        }
+                    });
+                    more.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            pageNumber++;
+                            getVideosFromDatabaseToAdapter(pageItems * pageNumber);
+                        }
+                    });
+                }
+                else if(position==2)
+                {
+                    view = LayoutInflater.from(
+                            getBaseContext()).inflate(R.layout.empty_layout, null, false);
+                }
+                else if(position==3)
+                {
+                    view = LayoutInflater.from(
+                            getBaseContext()).inflate(R.layout.empty_layout, null, false);
+                }
+                else if(position==4)
+                {
+                    view = LayoutInflater.from(
+                            getBaseContext()).inflate(R.layout.empty_layout, null, false);
+                }
+                else
+                {
+                    view = LayoutInflater.from(
+                            getBaseContext()).inflate(R.layout.empty_layout, null, false);
+                }
+
+
+
+                //final TextView txtPage = (TextView) view.findViewById(R.id.txt_vp_item_page);
+                //txtPage.setText(String.format("Page #%d", position));
+
+                container.addView(view);
+                return view;
+            }
         });
 
+        final String[] colors = getResources().getStringArray(R.array.default_preview);
+
+        final NavigationTabBar navigationTabBar = (NavigationTabBar) findViewById(R.id.ntb_horizontal);
+        final ArrayList<NavigationTabBar.Model> models = new ArrayList<>();
+        models.add(
+                new NavigationTabBar.Model.Builder(
+                        getResources().getDrawable(R.drawable.ic_first),
+                        Color.parseColor(colors[0]))
+                        .selectedIcon(getResources().getDrawable(R.drawable.ic_sixth))
+                        .title("Heart")
+                        .badgeTitle("NTB")
+                        .build()
+        );
+        models.add(
+                new NavigationTabBar.Model.Builder(
+                        getResources().getDrawable(R.drawable.ic_second),
+                        Color.parseColor(colors[1]))
+//                        .selectedIcon(getResources().getDrawable(R.drawable.ic_eighth))
+                        .title("Cup")
+                        .badgeTitle("with")
+                        .build()
+        );
+        models.add(
+                new NavigationTabBar.Model.Builder(
+                        getResources().getDrawable(R.drawable.ic_third),
+                        Color.parseColor(colors[2]))
+                        .selectedIcon(getResources().getDrawable(R.drawable.ic_seventh))
+                        .title("Diploma")
+                        .badgeTitle("state")
+                        .build()
+        );
+        models.add(
+                new NavigationTabBar.Model.Builder(
+                        getResources().getDrawable(R.drawable.ic_fourth),
+                        Color.parseColor(colors[3]))
+//                        .selectedIcon(getResources().getDrawable(R.drawable.ic_eighth))
+                        .title("Flag")
+                        .badgeTitle("icon")
+                        .build()
+        );
+        models.add(
+                new NavigationTabBar.Model.Builder(
+                        getResources().getDrawable(R.drawable.ic_fifth),
+                        Color.parseColor(colors[4]))
+                        .selectedIcon(getResources().getDrawable(R.drawable.ic_eighth))
+                        .title("Medal")
+                        .badgeTitle("777")
+                        .build()
+        );
+
+        navigationTabBar.setModels(models);
+        navigationTabBar.setViewPager(viewPager, 2);
+        navigationTabBar.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(final int position, final float positionOffset, final int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(final int position) {
+                navigationTabBar.getModels().get(position).hideBadge();
+            }
+
+            @Override
+            public void onPageScrollStateChanged(final int state) {
+
+            }
+        });
+
+        navigationTabBar.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < navigationTabBar.getModels().size(); i++) {
+                    final NavigationTabBar.Model model = navigationTabBar.getModels().get(i);
+                    navigationTabBar.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            model.showBadge();
+                        }
+                    }, i * 100);
+                }
+            }
+        }, 500);
     }
 
     public void getVideosFromDatabaseAfterSearch(final String search) {
@@ -271,7 +447,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     try {
                         if (jsonObject.has("nextPageToken")) {
-                            PAGETOKEN.add(++page, jsonObject.getString("nextPageToken"));
                             String nextPageToken = jsonObject.getString("nextPageToken");
                             Log.e(TAG, nextPageToken);
                             pushNewVideosFromApiCallToDatabase("https://www.googleapis.com/youtube/v3/search?part=snippet&" +
